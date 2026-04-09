@@ -267,6 +267,7 @@
     <div class="container">
       <h2>Book a Lesson</h2>
       <p class="section-sub">Fill out the form and I'll be in touch within 24 hours.</p>
+      <div id="form-message" style="display:none; margin-bottom:1rem; padding:1rem; border-radius:6px; font-weight:600;"></div>
       <form onsubmit="handleSubmit(event)">
         <div>
           <label for="name">Full Name</label>
@@ -277,21 +278,21 @@
           <input type="email" id="email" placeholder="jane@example.com" required />
         </div>
         <div>
-          <label for="level">Lesson Type</label>
-          <select id="level">
-            <option value="">Select level…</option>
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+1 555 000 0000" required />
         </div>
         <div>
-          <label for="time">Preferred Time</label>
-          <input type="text" id="time" placeholder="e.g. Weekday evenings, Saturday mornings" />
+          <label for="lesson_type">Lesson Type</label>
+          <select id="lesson_type" required>
+            <option value="">Select level…</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
         </div>
         <div class="field-full">
-          <label for="message">Anything else? (optional)</label>
-          <textarea id="message" placeholder="Tell me about your goals, experience, or any songs you'd love to learn…"></textarea>
+          <label for="preferred_datetime">Preferred Date &amp; Time</label>
+          <input type="datetime-local" id="preferred_datetime" required />
         </div>
         <div class="form-submit">
           <button type="submit" class="btn">Send Request</button>
@@ -305,14 +306,42 @@
     <p>&copy; 2026 <span>Strum</span> &mdash; Guitar Lessons. All rights reserved.</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    function handleSubmit(e) {
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://eidjxnwoynimgrbmmicb.supabase.co',
+      'sb_publishable_3md-vc9R948LxWNQT3eT3g_SsoeoQZo'
+    );
+
+    async function handleSubmit(e) {
       e.preventDefault();
       const btn = e.target.querySelector('button[type="submit"]');
-      btn.textContent = 'Request Sent!';
+      const msgEl = document.getElementById('form-message');
+
+      btn.textContent = 'Sending…';
       btn.disabled = true;
-      btn.style.background = '#5a8a5a';
-      e.target.reset();
+
+      const { error } = await sb.from('bookings').insert({
+        name:               document.getElementById('name').value.trim(),
+        email:              document.getElementById('email').value.trim(),
+        phone:              document.getElementById('phone').value.trim(),
+        lesson_type:        document.getElementById('lesson_type').value,
+        preferred_datetime: document.getElementById('preferred_datetime').value,
+      });
+
+      if (error) {
+        msgEl.textContent = 'Something went wrong. Please try again.';
+        msgEl.style.cssText = 'display:block; padding:1rem; border-radius:6px; font-weight:600; background:#fdecea; color:#b00020;';
+        btn.textContent = 'Send Request';
+        btn.disabled = false;
+      } else {
+        msgEl.textContent = 'Booking request sent! I\'ll be in touch within 24 hours.';
+        msgEl.style.cssText = 'display:block; padding:1rem; border-radius:6px; font-weight:600; background:#e6f4ea; color:#1e6b3a;';
+        btn.textContent = 'Request Sent!';
+        btn.style.background = '#5a8a5a';
+        e.target.reset();
+      }
     }
 
     // Smooth scroll for nav links
