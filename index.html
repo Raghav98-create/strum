@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strum — Guitar Lessons</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown:   #3b1f0e;
+      --amber:   #c8762b;
+      --cream:   #fdf6ec;
+      --light:   #f5e9d6;
+      --text:    #2b1a0a;
+      --muted:   #7a5c3e;
+      --radius:  10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      line-height: 1.65;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 2.5rem;
+      background: var(--brown);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2rem;
+    }
+    nav a {
+      color: var(--cream);
+      text-decoration: none;
+      font-size: 0.95rem;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    nav a:hover { opacity: 1; }
+
+    /* HERO */
+    .hero {
+      background: linear-gradient(135deg, var(--brown) 55%, var(--amber) 100%);
+      color: var(--cream);
+      text-align: center;
+      padding: 7rem 2rem 6rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 800;
+      margin-bottom: 1rem;
+      line-height: 1.15;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      opacity: 0.85;
+      max-width: 520px;
+      margin: 0 auto 2.2rem;
+    }
+    .btn {
+      display: inline-block;
+      background: var(--amber);
+      color: #fff;
+      padding: 0.85rem 2.2rem;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn:hover { background: #a85e1e; transform: translateY(-2px); }
+
+    /* SECTIONS */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 960px; margin: 0 auto; }
+    h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--brown);
+    }
+    .section-sub {
+      color: var(--muted);
+      margin-bottom: 2.5rem;
+      font-size: 1.05rem;
+    }
+
+    /* ABOUT */
+    .about { background: var(--light); }
+    .about-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2.5rem;
+      align-items: center;
+    }
+    .avatar {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: var(--amber);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3.5rem;
+      flex-shrink: 0;
+    }
+    .about-text p { color: var(--muted); }
+
+    /* LESSONS */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #e6d5bf;
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .card:hover { box-shadow: 0 6px 20px rgba(59,31,14,0.1); transform: translateY(-3px); }
+    .card-icon { font-size: 2.4rem; margin-bottom: 1rem; }
+    .card h3 { font-size: 1.2rem; color: var(--brown); margin-bottom: 0.5rem; }
+    .card p { font-size: 0.92rem; color: var(--muted); }
+    .card .price {
+      display: inline-block;
+      margin-top: 1.2rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--amber);
+    }
+
+    /* BOOKING FORM */
+    .booking { background: var(--light); }
+    form {
+      background: #fff;
+      border: 1px solid #e6d5bf;
+      border-radius: var(--radius);
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+    }
+    .field-full { grid-column: 1 / -1; }
+    label { display: block; font-size: 0.88rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--brown); }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 1.5px solid #d9c4a8;
+      border-radius: 6px;
+      font-size: 0.97rem;
+      background: var(--cream);
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--amber);
+    }
+    textarea { resize: vertical; min-height: 90px; }
+    .form-submit { grid-column: 1 / -1; text-align: right; }
+
+    /* FOOTER */
+    footer {
+      background: var(--brown);
+      color: var(--cream);
+      text-align: center;
+      padding: 2.5rem 1rem;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+    footer span { color: var(--amber); }
+
+    @media (max-width: 600px) {
+      nav ul { display: none; }
+      .about-grid { grid-template-columns: 1fr; text-align: center; }
+      .avatar { margin: 0 auto; }
+      form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">Strum</div>
+    <ul>
+      <li><a href="#about">About</a></li>
+      <li><a href="#lessons">Lessons</a></li>
+      <li><a href="#book">Book</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero">
+    <h1>Learn Guitar.<br>Find Your Sound.</h1>
+    <p>One-on-one lessons tailored to your pace — beginner strums to advanced solos.</p>
+    <a href="#book" class="btn">Book a Lesson</a>
+  </header>
+
+  <!-- ABOUT -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="avatar">🎸</div>
+        <div class="about-text">
+          <h2>Meet Your Instructor</h2>
+          <p class="section-sub">15 years of playing, 8 years of teaching.</p>
+          <p>Hi! I'm Alex, a professional guitarist and dedicated teacher. I've helped students of all ages discover their love for music — from total beginners picking up a guitar for the first time, to intermediate players ready to break through plateaus. Lessons are relaxed, encouraging, and always focused on the music <em>you</em> want to play.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LESSONS -->
+  <section id="lessons">
+    <div class="container">
+      <h2>Lesson Plans</h2>
+      <p class="section-sub">Choose the level that fits where you are right now.</p>
+      <div class="cards">
+        <div class="card">
+          <div class="card-icon">🌱</div>
+          <h3>Beginner</h3>
+          <p>Open chords, basic strumming patterns, and your first songs. No experience needed.</p>
+          <span class="price">$45 / session</span>
+        </div>
+        <div class="card">
+          <div class="card-icon">🔥</div>
+          <h3>Intermediate</h3>
+          <p>Barre chords, fingerpicking, music theory fundamentals, and genre exploration.</p>
+          <span class="price">$55 / session</span>
+        </div>
+        <div class="card">
+          <div class="card-icon">⚡</div>
+          <h3>Advanced</h3>
+          <p>Soloing, improvisation, composition, and performance coaching.</p>
+          <span class="price">$65 / session</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOOKING FORM -->
+  <section class="booking" id="book">
+    <div class="container">
+      <h2>Book a Lesson</h2>
+      <p class="section-sub">Fill out the form and I'll be in touch within 24 hours.</p>
+      <form onsubmit="handleSubmit(event)">
+        <div>
+          <label for="name">Full Name</label>
+          <input type="text" id="name" placeholder="Jane Smith" required />
+        </div>
+        <div>
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="jane@example.com" required />
+        </div>
+        <div>
+          <label for="level">Lesson Type</label>
+          <select id="level">
+            <option value="">Select level…</option>
+            <option>Beginner</option>
+            <option>Intermediate</option>
+            <option>Advanced</option>
+          </select>
+        </div>
+        <div>
+          <label for="time">Preferred Time</label>
+          <input type="text" id="time" placeholder="e.g. Weekday evenings, Saturday mornings" />
+        </div>
+        <div class="field-full">
+          <label for="message">Anything else? (optional)</label>
+          <textarea id="message" placeholder="Tell me about your goals, experience, or any songs you'd love to learn…"></textarea>
+        </div>
+        <div class="form-submit">
+          <button type="submit" class="btn">Send Request</button>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2026 <span>Strum</span> &mdash; Guitar Lessons. All rights reserved.</p>
+  </footer>
+
+  <script>
+    function handleSubmit(e) {
+      e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.textContent = 'Request Sent!';
+      btn.disabled = true;
+      btn.style.background = '#5a8a5a';
+      e.target.reset();
+    }
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.querySelector(a.getAttribute('href'))
+          ?.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+
+</body>
+</html>
