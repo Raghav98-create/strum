@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strum — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown:  #3b1f0e;
+      --amber:  #c8762b;
+      --cream:  #fdf6ec;
+      --light:  #f5e9d6;
+      --text:   #2b1a0a;
+      --muted:  #7a5c3e;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--cream);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.1rem 2.5rem;
+      background: var(--brown);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+    .nav-right span {
+      color: var(--cream);
+      font-size: 0.9rem;
+      opacity: 0.75;
+    }
+    .btn-logout {
+      background: transparent;
+      border: 1.5px solid var(--amber);
+      color: var(--amber);
+      padding: 0.45rem 1.1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-logout:hover { background: var(--amber); color: #fff; }
+
+    main {
+      flex: 1;
+      padding: 3rem 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .page-header {
+      margin-bottom: 2rem;
+    }
+    .page-header h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      color: var(--brown);
+      margin-bottom: 0.3rem;
+    }
+    .page-header p { color: var(--muted); font-size: 0.95rem; }
+
+    .table-wrap {
+      background: #fff;
+      border: 1px solid #e6d5bf;
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+    thead {
+      background: var(--brown);
+      color: var(--cream);
+    }
+    th {
+      padding: 0.9rem 1.1rem;
+      text-align: left;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.85rem 1.1rem;
+      border-bottom: 1px solid #f0e3d0;
+      color: var(--text);
+      vertical-align: middle;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--light); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .badge-beginner     { background: #e6f4ea; color: #1e6b3a; }
+    .badge-intermediate { background: #fff3e0; color: #8a4a00; }
+    .badge-advanced     { background: #fdecea; color: #b00020; }
+
+    .state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+    .state .icon { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }
+
+    footer {
+      background: var(--brown);
+      color: var(--cream);
+      text-align: center;
+      padding: 1.5rem 1rem;
+      font-size: 0.88rem;
+      opacity: 0.9;
+      margin-top: auto;
+    }
+    footer span { color: var(--amber); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="logo">Strum</a>
+    <div class="nav-right">
+      <span id="user-email"></span>
+      <button class="btn-logout" id="logout-btn">Log Out</button>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-header">
+      <h1>Bookings</h1>
+      <p>All lesson requests submitted through the website.</p>
+    </div>
+
+    <div class="table-wrap">
+      <div class="state" id="state-loading">
+        <span class="icon">⏳</span>Loading bookings…
+      </div>
+      <table id="bookings-table" style="display:none;">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Lesson Type</th>
+            <th>Preferred Date &amp; Time</th>
+          </tr>
+        </thead>
+        <tbody id="bookings-body"></tbody>
+      </table>
+      <div class="state" id="state-empty" style="display:none;">
+        <span class="icon">📭</span>No bookings yet.
+      </div>
+      <div class="state" id="state-error" style="display:none;">
+        <span class="icon">⚠️</span>Failed to load bookings. Please refresh.
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 <span>Strum</span> &mdash; Guitar Lessons.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const sb = createClient(
+      'https://eidjxnwoynimgrbmmicb.supabase.co',
+      'sb_publishable_3md-vc9R948LxWNQT3eT3g_SsoeoQZo'
+    );
+
+    function show(id) {
+      ['state-loading', 'bookings-table', 'state-empty', 'state-error'].forEach(el => {
+        document.getElementById(el).style.display = el === id ? (id === 'bookings-table' ? 'table' : 'block') : 'none';
+      });
+    }
+
+    function badgeClass(type) {
+      if (!type) return '';
+      const t = type.toLowerCase();
+      if (t === 'beginner')     return 'badge badge-beginner';
+      if (t === 'intermediate') return 'badge badge-intermediate';
+      if (t === 'advanced')     return 'badge badge-advanced';
+      return 'badge';
+    }
+
+    function formatDateTime(raw) {
+      if (!raw) return '—';
+      const d = new Date(raw);
+      return isNaN(d) ? raw : d.toLocaleString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    async function loadBookings() {
+      const { data, error } = await sb
+        .from('bookings')
+        .select('name, email, phone, lesson_type, preferred_datetime')
+        .order('preferred_datetime', { ascending: true });
+
+      if (error) { show('state-error'); return; }
+      if (!data || data.length === 0) { show('state-empty'); return; }
+
+      const tbody = document.getElementById('bookings-body');
+      tbody.innerHTML = data.map(row => `
+        <tr>
+          <td>${row.name || '—'}</td>
+          <td>${row.email || '—'}</td>
+          <td>${row.phone || '—'}</td>
+          <td><span class="${badgeClass(row.lesson_type)}">${row.lesson_type || '—'}</span></td>
+          <td>${formatDateTime(row.preferred_datetime)}</td>
+        </tr>
+      `).join('');
+
+      show('bookings-table');
+    }
+
+    // Auth guard — redirect if not logged in
+    sb.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        window.location.href = 'login.html';
+        return;
+      }
+      document.getElementById('user-email').textContent = session.user.email;
+      loadBookings();
+    });
+
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      await sb.auth.signOut();
+      window.location.href = 'login.html';
+    });
+  </script>
+
+</body>
+</html>
