@@ -2,11 +2,34 @@ import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
 
+const ALLOWED_ORIGINS = [
+  'https://strum-seven.vercel.app',
+  'http://localhost:8080',
+  'http://127.0.0.1:8080',
+];
+
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://strum-seven.vercel.app',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// In-memory rate limiter: max 20 requests per IP per 60 seconds
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 20;
+const RATE_WINDOW_MS = 60_000;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT) return true;
+  entry.count++;
+  return false;
+}
 
 const SYSTEM_PROMPT = `You are a friendly assistant for Strum, a guitar lesson booking service.
 
@@ -26,10 +49,32 @@ Your role:
 - Keep replies concise, warm, and encouraging
 - Do not make up information not listed above`;
 
-serve(async (req) => {
+serve(async (req: Request) => {
+  const origin = req.headers.get('origin') ?? '';
+  const corsHeaders = ALLOWED_ORIGINS.includes(origin)
+    ? { ...CORS_HEADERS, 'Access-Control-Allow-Origin': origin }
+    : CORS_HEADERS;
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: CORS_HEADERS });
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // Block requests from disallowed origins
+  if (!ALLOWED_ORIGINS.includes(origin)) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  // Rate limiting by IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
+  if (isRateLimited(ip)) {
+    return new Response(JSON.stringify({ error: 'Too many requests. Please wait a moment.' }), {
+      status: 429,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -38,7 +83,7 @@ serve(async (req) => {
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages array required' }), {
         status: 400,
-        headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
@@ -67,13 +112,13 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ reply }), {
       status: 200,
-      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     console.error('Chat function error:', err);
     return new Response(JSON.stringify({ error: String(err) }), {
       status: 500,
-      headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });

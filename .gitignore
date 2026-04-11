@@ -1,0 +1,20 @@
+# Environment & secrets
+.env
+.env.*
+*.env
+.env.local
+.env.production
+supabase/.env.local
+
+# Supabase local dev
+supabase/.branches
+supabase/.temp
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
